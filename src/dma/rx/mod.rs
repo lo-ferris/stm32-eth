@@ -38,26 +38,27 @@ impl<'data, STATE> RxRing<'data, STATE> {
     /// Demand that the DMA engine polls the current `RxDescriptor`
     /// (when in `RunningState::Stopped`.)
     pub fn demand_poll(&self, eth_dma: &ETHERNET_DMA) {
-        eth_dma.dmarpdr.write(|w| unsafe { w.rpd().bits(1) });
+        // eth_dma.dmarpdr.write(|w| unsafe { w.rpd().bits(1) });
     }
 
     /// Get current `RunningState`
     pub fn running_state(&self, eth_dma: &ETHERNET_DMA) -> RunningState {
-        match eth_dma.dmasr.read().rps().bits() {
-            //  Reset or Stop Receive Command issued
-            0b000 => RunningState::Stopped,
-            //  Fetching receive transfer descriptor
-            0b001 => RunningState::Running,
-            //  Waiting for receive packet
-            0b011 => RunningState::Running,
-            //  Receive descriptor unavailable
-            0b100 => RunningState::Stopped,
-            //  Closing receive descriptor
-            0b101 => RunningState::Running,
-            //  Transferring the receive packet data from receive buffer to host memory
-            0b111 => RunningState::Running,
-            _ => RunningState::Unknown,
-        }
+        // match eth_dma.dmasr.read().rps().bits() {
+        //     //  Reset or Stop Receive Command issued
+        //     0b000 => RunningState::Stopped,
+        //     //  Fetching receive transfer descriptor
+        //     0b001 => RunningState::Running,
+        //     //  Waiting for receive packet
+        //     0b011 => RunningState::Running,
+        //     //  Receive descriptor unavailable
+        //     0b100 => RunningState::Stopped,
+        //     //  Closing receive descriptor
+        //     0b101 => RunningState::Running,
+        //     //  Transferring the receive packet data from receive buffer to host memory
+        //     0b111 => RunningState::Running,
+        //     _ => RunningState::Unknown,
+        // }
+        todo!()
     }
 }
 
@@ -78,21 +79,18 @@ impl<'data> RxRing<'data, NotRunning> {
             entry.setup(buffer);
         }
 
-        self.ring
-            .descriptors_and_buffers()
-            .last()
-            .map(|(desc, _)| desc.set_end_of_ring());
+        self.ring.last_descriptor().set_end_of_ring();
 
         self.next_entry = 0;
         let ring_ptr = self.ring.descriptors_start_address();
 
         // Set the RxDma ring start address.
-        eth_dma
-            .dmardlar
-            .write(|w| unsafe { w.srl().bits(ring_ptr as u32) });
+        // eth_dma
+        //     .dmardlar
+        //     .write(|w| unsafe { w.srl().bits(ring_ptr as u32) });
 
-        // Start receive
-        eth_dma.dmaomr.modify(|_, w| w.sr().set_bit());
+        // // Start receive
+        // eth_dma.dmaomr.modify(|_, w| w.sr().set_bit());
 
         self.demand_poll(eth_dma);
 
@@ -107,9 +105,9 @@ impl<'data> RxRing<'data, NotRunning> {
 impl<'data> RxRing<'data, Running> {
     /// Stop the DMA engine.
     pub fn stop(&mut self, eth_dma: &ETHERNET_DMA) {
-        eth_dma.dmaomr.modify(|_, w| w.sr().clear_bit());
+        // eth_dma.dmaomr.modify(|_, w| w.sr().clear_bit());
 
-        while self.running_state(eth_dma) != RunningState::Stopped {}
+        // while self.running_state(eth_dma) != RunningState::Stopped {}
     }
 
     /// Receive the next packet (if any is ready), or return `None`

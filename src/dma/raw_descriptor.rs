@@ -2,10 +2,13 @@ use volatile_register::{RO, RW};
 
 use crate::MTU;
 
-#[cfg(not(feature = "stm32f1xx-hal"))]
+#[cfg(all(not(feature = "stm32f1xx-hal"), feature = "f-series"))]
 pub(crate) const DESC_SIZE: usize = 8;
 
 #[cfg(feature = "stm32f1xx-hal")]
+pub(crate) const DESC_SIZE: usize = 4;
+
+#[cfg(feature = "stm32h7xx-hal")]
 pub(crate) const DESC_SIZE: usize = 4;
 
 #[repr(C)]
@@ -80,6 +83,14 @@ impl<'data, T> DescriptorRing<'data, T> {
 
     pub fn descriptors(&self) -> impl Iterator<Item = &T> {
         self.descriptors.iter()
+    }
+
+    pub fn last_descriptor(&mut self) -> &mut T {
+        &mut self.descriptors[self.descriptors.len() - 1]
+    }
+
+    pub fn first_buffer(&self) -> &[u8] {
+        &self.buffers[self.buffers.len() - 1]
     }
 
     pub fn descriptors_mut(&mut self) -> impl Iterator<Item = &mut T> {
